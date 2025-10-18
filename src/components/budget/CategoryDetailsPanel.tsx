@@ -22,17 +22,17 @@ import type {
 } from "@/stores/budgetPlannerStore";
 
 const TARGET_TABS = [
-  { label: "Weekly", value: "weekly" as const },
-  { label: "Monthly", value: "monthly" as const },
-  { label: "Yearly", value: "yearly" as const },
-  { label: "Custom", value: "custom" as const }
+  { label: "Semanal", value: "weekly" as const },
+  { label: "Mensal", value: "monthly" as const },
+  { label: "Anual", value: "yearly" as const },
+  { label: "Personalizada", value: "custom" as const }
 ];
 
 const DUE_DAY_OPTIONS: Array<{ label: string; value: number | null }> = [
-  { label: "Last Day of Month", value: null },
-  { label: "1st of the Month", value: 1 },
-  { label: "15th of the Month", value: 15 },
-  { label: "24th of the Month", value: 24 }
+  { label: "Último dia do mês", value: null },
+  { label: "Dia 1 do mês", value: 1 },
+  { label: "Dia 15 do mês", value: 15 },
+  { label: "Dia 24 do mês", value: 24 }
 ];
 
 type CategoryDetailsPayload = {
@@ -84,12 +84,7 @@ type TargetFormState = {
 };
 
 function ordinal(day: number) {
-  const suffixes = ["th", "st", "nd", "rd"];
-  const rem100 = day % 100;
-  if (rem100 >= 11 && rem100 <= 13) return `${day}th`;
-  const rem10 = day % 10;
-  const suffix = suffixes[rem10] ?? suffixes[0];
-  return `${day}${suffix}`;
+  return `${day}º`;
 }
 
 function getInitialForm(goal: BudgetGoal | undefined): TargetFormState {
@@ -138,7 +133,7 @@ function useCategoryDetails(categoryId: string, month: string) {
       .then(async (response) => {
         if (!response.ok) {
           const message = await response.text();
-          throw new Error(message || "Failed to load category details");
+          throw new Error(message || "Não foi possível carregar os detalhes da categoria.");
         }
         return response.json() as Promise<CategoryDetailsPayload>;
       })
@@ -147,7 +142,7 @@ function useCategoryDetails(categoryId: string, month: string) {
       })
       .catch((err) => {
         if (controller.signal.aborted) return;
-        setError(err?.message ?? "Unable to load category details");
+        setError(err?.message ?? "Não foi possível carregar os detalhes da categoria.");
       })
       .finally(() => {
         if (!controller.signal.aborted) {
@@ -166,7 +161,7 @@ function useCategoryDetails(categoryId: string, month: string) {
       .then(async (response) => {
         if (!response.ok) {
           const message = await response.text();
-          throw new Error(message || "Failed to load category details");
+          throw new Error(message || "Não foi possível carregar os detalhes da categoria.");
         }
         return response.json() as Promise<CategoryDetailsPayload>;
       })
@@ -174,7 +169,7 @@ function useCategoryDetails(categoryId: string, month: string) {
         setData(payload);
       })
       .catch((err) => {
-        setError(err?.message ?? "Unable to load category details");
+        setError(err?.message ?? "Não foi possível carregar os detalhes da categoria.");
       })
       .finally(() => setLoading(false));
   };
@@ -318,7 +313,7 @@ export function CategoryDetailsPanel({
   const handleSaveGoal = async () => {
     const cents = normalizarValorMonetario(form.amountInput || "0");
     if (cents <= 0) {
-      setTargetError("Enter a value greater than zero for the target.");
+      setTargetError("Informe um valor maior que zero para a meta.");
       return;
     }
     setSavingGoal(true);
@@ -385,21 +380,21 @@ export function CategoryDetailsPanel({
       });
       if (!response.ok) {
         const message = await response.text();
-        throw new Error(message || "Failed to save note");
+        throw new Error(message || "Não foi possível salvar a anotação.");
       }
       setNoteDraft(trimmed);
       setNoteError(null);
       refresh();
     } catch (err: any) {
-      setNoteError(err?.message ?? "Unable to save note.");
+      setNoteError(err?.message ?? "Não foi possível salvar a anotação.");
     } finally {
       setSavingNote(false);
     }
   };
 
   const dueDayLabel = goal?.due_day_of_month
-    ? `${ordinal(goal.due_day_of_month)} of the Month`
-    : "Last Day of the Month";
+    ? `${ordinal(goal.due_day_of_month)} dia do mês`
+    : "Último dia do mês";
 
   return (
     <div className="flex h-full flex-col gap-6">
@@ -416,7 +411,7 @@ export function CategoryDetailsPanel({
             type="button"
             className="rounded-full border border-[var(--cc-border)] p-2 text-[var(--cc-text-muted)] transition hover:bg-[var(--cc-bg-elev)]"
             onClick={() => void onRename()}
-            aria-label="Edit category"
+            aria-label="Editar categoria"
           >
             <Pencil size={16} />
           </button>
@@ -425,13 +420,13 @@ export function CategoryDetailsPanel({
             className="rounded-full border border-[var(--cc-border)] px-3 py-1 text-xs font-semibold text-[var(--state-danger)] transition hover:bg-[var(--cc-bg-elev)]"
             onClick={() => void onArchive()}
           >
-            Archive
+            Arquivar
           </button>
           <button
             type="button"
             className="rounded-full border border-[var(--cc-border)] p-2 text-[var(--cc-text-muted)] transition hover:bg-[var(--cc-bg-elev)]"
             onClick={onClose}
-            aria-label="Close details"
+            aria-label="Fechar detalhes"
           >
             <X size={16} />
           </button>
@@ -441,8 +436,8 @@ export function CategoryDetailsPanel({
       <section className="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-surface)] p-5 shadow-[var(--shadow-1)]">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-[var(--cc-text)]">Available Balance</h3>
-            <p className="text-xs text-[var(--cc-text-muted)]">Updated with the latest assignments</p>
+            <h3 className="text-sm font-semibold text-[var(--cc-text)]">Saldo disponível</h3>
+            <p className="text-xs text-[var(--cc-text-muted)]">Atualizado com as distribuições mais recentes</p>
           </div>
           <p
             className={`text-2xl font-semibold ${
@@ -453,29 +448,29 @@ export function CategoryDetailsPanel({
           </p>
         </div>
         {loading ? (
-          <p className="mt-4 text-sm text-[var(--cc-text-muted)]">Loading category details…</p>
+          <p className="mt-4 text-sm text-[var(--cc-text-muted)]">Carregando detalhes da categoria…</p>
         ) : error ? (
           <p className="mt-4 text-sm text-[var(--state-danger)]">{error}</p>
         ) : (
           <dl className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between">
-              <dt className="text-[var(--cc-text-muted)]">Cash Left Over From Last Month</dt>
+              <dt className="text-[var(--cc-text-muted)]">Dinheiro restante do mês anterior</dt>
               <dd className="font-semibold text-[var(--cc-text)]">
                 {fmtBRL(summary.cash_left_over_from_last_month_cents)}
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-[var(--cc-text-muted)]">Assigned This Month</dt>
+              <dt className="text-[var(--cc-text-muted)]">Distribuído neste mês</dt>
               <dd className="font-semibold text-[var(--cc-text)]">
                 {fmtBRL(summary.assigned_this_month_cents)}
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-[var(--cc-text-muted)]">Cash Spending</dt>
+              <dt className="text-[var(--cc-text-muted)]">Gastos em dinheiro</dt>
               <dd className="font-semibold text-[var(--cc-text)]">{fmtBRL(summary.cash_spending_cents)}</dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-[var(--cc-text-muted)]">Credit Spending</dt>
+              <dt className="text-[var(--cc-text-muted)]">Gastos no crédito</dt>
               <dd className="font-semibold text-[var(--cc-text)]">{fmtBRL(summary.credit_spending_cents)}</dd>
             </div>
           </dl>
@@ -490,10 +485,10 @@ export function CategoryDetailsPanel({
           aria-expanded={targetExpanded}
         >
           <div>
-            <h3 className="text-sm font-semibold text-[var(--cc-text)]">Target</h3>
+            <h3 className="text-sm font-semibold text-[var(--cc-text)]">Meta</h3>
             {!goal && !isEditingTarget ? (
               <p className="text-xs text-[var(--cc-text-muted)]">
-                How much do you need for {category.name}?
+                De quanto você precisa para {category.name}?
               </p>
             ) : null}
           </div>
@@ -522,13 +517,13 @@ export function CategoryDetailsPanel({
                 </div>
 
                 <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--cc-text)]">
-                  <span>I need</span>
+                  <span>Preciso de</span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       className="rounded-full border border-[var(--cc-border)] p-2 text-[var(--cc-text)] transition hover:bg-[var(--cc-bg-elev)]"
                       onClick={() => handleAdjustAmount(-100)}
-                      aria-label="Decrease amount"
+                      aria-label="Diminuir valor"
                     >
                       <Minus size={16} />
                     </button>
@@ -549,7 +544,7 @@ export function CategoryDetailsPanel({
                       type="button"
                       className="rounded-full border border-[var(--cc-border)] p-2 text-[var(--cc-text)] transition hover:bg-[var(--cc-bg-elev)]"
                       onClick={() => handleAdjustAmount(100)}
-                      aria-label="Increase amount"
+                      aria-label="Aumentar valor"
                     >
                       <Plus size={16} />
                     </button>
@@ -557,7 +552,7 @@ export function CategoryDetailsPanel({
                 </label>
 
                 <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--cc-text)]">
-                  <span>By</span>
+                  <span>Até</span>
                   <select
                     className="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-bg-elev)] px-4 py-2 text-sm font-semibold shadow-sm focus:border-[var(--ring)] focus:outline-none"
                     value={form.dueDay ?? "last"}
@@ -582,9 +577,9 @@ export function CategoryDetailsPanel({
                 </label>
 
                 <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--cc-text)]">
-                  <span>Next month I want to</span>
+                  <span>No próximo mês eu quero</span>
                   <select className="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-bg-elev)] px-4 py-2 text-sm font-semibold text-[var(--cc-text-muted)] shadow-sm" disabled>
-                    <option>Set aside another {fmtBRL(normalizarValorMonetario(form.amountInput || "0"))}</option>
+                    <option>Reservar mais {fmtBRL(normalizarValorMonetario(form.amountInput || "0"))}</option>
                   </select>
                 </label>
 
@@ -600,7 +595,7 @@ export function CategoryDetailsPanel({
                       onClick={handleDeleteGoal}
                       disabled={savingGoal}
                     >
-                      Delete
+                      Remover meta
                     </button>
                   ) : null}
                   <button
@@ -609,7 +604,7 @@ export function CategoryDetailsPanel({
                     onClick={handleCancelEdit}
                     disabled={savingGoal}
                   >
-                    Cancel
+                    Cancelar
                   </button>
                   <button
                     type="button"
@@ -617,7 +612,7 @@ export function CategoryDetailsPanel({
                     onClick={handleSaveGoal}
                     disabled={savingGoal}
                   >
-                    Save Target
+                    Salvar meta
                   </button>
                 </div>
               </div>
@@ -625,9 +620,9 @@ export function CategoryDetailsPanel({
               <div className="space-y-4">
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-[var(--cc-text)]">
-                    Set Aside Another {fmtBRL(goal.amount_cents)} Each {goal.cadence === "weekly" ? "Week" : goal.cadence === "yearly" ? "Year" : "Month"}
+                    Reserve mais {fmtBRL(goal.amount_cents)} a cada {goal.cadence === "weekly" ? "semana" : goal.cadence === "yearly" ? "ano" : "mês"}
                   </p>
-                  <p className="text-xs text-[var(--cc-text-muted)]">By the {dueDayLabel}</p>
+                  <p className="text-xs text-[var(--cc-text-muted)]">Até o {dueDayLabel}</p>
                 </div>
 
                 <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center">
@@ -647,13 +642,13 @@ export function CategoryDetailsPanel({
                   <div className="space-y-1 text-center text-sm text-[var(--cc-text)] sm:text-left">
                     <p className="font-semibold">
                       {assignCalloutAmount > 0
-                        ? `Assign ${fmtBRL(assignCalloutAmount)} to meet your target.`
-                        : "You're on track for this target."}
+                        ? `Distribua ${fmtBRL(assignCalloutAmount)} para alcançar a meta.`
+                        : "Você está no caminho certo para esta meta."}
                     </p>
                     <p className="text-[var(--cc-text-muted)]">
-                      Keep assigning regularly to stay ahead of schedule.
+                      Continue distribuindo regularmente para se manter em dia.
                     </p>
-                  </div>
+                </div>
                 </div>
 
                 {assignCalloutAmount > 0 ? (
@@ -671,25 +666,25 @@ export function CategoryDetailsPanel({
                     }}
                     disabled={actionPending === "apply_goal"}
                   >
-                    Assign {fmtBRL(assignCalloutAmount)}
+                    Distribuir {fmtBRL(assignCalloutAmount)}
                   </button>
                 ) : null}
 
                 <dl className="grid gap-3 sm:grid-cols-3">
                   <div className="rounded-xl bg-[var(--cc-bg-elev)] px-4 py-3 text-sm">
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">Amount to Assign This Month</dt>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">Valor a distribuir neste mês</dt>
                     <dd className="mt-1 text-base font-semibold text-[var(--cc-text)]">
                       {fmtBRL(projection?.necessarioNoMes ?? 0)}
                     </dd>
                   </div>
                   <div className="rounded-xl bg-[var(--cc-bg-elev)] px-4 py-3 text-sm">
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">Assigned So Far</dt>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">Distribuído até agora</dt>
                     <dd className="mt-1 text-base font-semibold text-[var(--cc-text)]">
                       {fmtBRL(allocation?.assigned_cents ?? 0)}
                     </dd>
                   </div>
                   <div className="rounded-xl bg-[var(--cc-bg-elev)] px-4 py-3 text-sm">
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">To Go</dt>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">Restante</dt>
                     <dd className="mt-1 text-base font-semibold text-[var(--cc-text)]">
                       {fmtBRL(Math.max(projection?.falta ?? 0, 0))}
                     </dd>
@@ -701,20 +696,20 @@ export function CategoryDetailsPanel({
                   className="text-sm font-semibold text-[var(--cc-text)] underline-offset-4 hover:underline"
                   onClick={handleStartEdit}
                 >
-                  Edit Target
+                  Editar meta
                 </button>
               </div>
             ) : (
               <div className="space-y-3">
                 <p className="text-sm text-[var(--cc-text-muted)]">
-                  When you create a target, we’ll let you know how much money to set aside to stay on track over time.
+                  Ao criar uma meta, avisaremos quanto dinheiro reservar para se manter no ritmo.
                 </p>
                 <button
                   type="button"
                   className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-[var(--cc-text)] shadow-sm transition hover:brightness-105"
                   onClick={handleStartEdit}
                 >
-                  Create Target
+                  Criar meta
                 </button>
               </div>
             )}
@@ -722,14 +717,14 @@ export function CategoryDetailsPanel({
         ) : !goal ? (
           <div className="mt-4 space-y-3">
             <p className="text-sm text-[var(--cc-text-muted)]">
-              When you create a target, we’ll let you know how much money to set aside to stay on track over time.
+              Ao criar uma meta, avisaremos quanto dinheiro reservar para se manter no ritmo.
             </p>
             <button
               type="button"
               className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-[var(--cc-text)] shadow-sm transition hover:brightness-105"
               onClick={handleStartEdit}
             >
-              Create Target
+              Criar meta
             </button>
           </div>
         ) : null}
@@ -742,43 +737,43 @@ export function CategoryDetailsPanel({
           onClick={() => setAutoAssignExpanded((prev) => !prev)}
           aria-expanded={autoAssignExpanded}
         >
-          <h3 className="text-sm font-semibold text-[var(--cc-text)]">Auto-Assign</h3>
+          <h3 className="text-sm font-semibold text-[var(--cc-text)]">Distribuição automática</h3>
           {autoAssignExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
         {autoAssignExpanded ? (
           <div className="mt-4 space-y-2 text-sm">
             <AutoAssignRow
-              label="Assigned Last Month"
+              label="Distribuído no mês anterior"
               value={autoAssign.assigned_last_month_cents}
               onClick={() => handleAssignAction("assigned_last_month", autoAssign.assigned_last_month_cents, onAssign)}
               pending={actionPending === "assigned_last_month"}
             />
             <AutoAssignRow
-              label="Spent Last Month"
+              label="Gasto no mês anterior"
               value={autoAssign.spent_last_month_cents}
               onClick={() => handleAssignAction("spent_last_month", autoAssign.spent_last_month_cents, onAssign)}
               pending={actionPending === "spent_last_month"}
             />
             <AutoAssignRow
-              label="Average Assigned"
+              label="Média distribuída"
               value={autoAssign.average_assigned_cents}
               onClick={() => handleAssignAction("average_assigned", autoAssign.average_assigned_cents, onAssign)}
               pending={actionPending === "average_assigned"}
             />
             <AutoAssignRow
-              label="Average Spent"
+              label="Média gasta"
               value={autoAssign.average_spent_cents}
               onClick={() => handleAssignAction("average_spent", autoAssign.average_spent_cents, onAssign)}
               pending={actionPending === "average_spent"}
             />
             <AutoAssignRow
-              label="Reset Available Amount"
+              label="Recalcular disponível"
               value={summary.available_balance_cents}
               onClick={handleResetAvailable}
               pending={actionPending === "reset_available"}
             />
             <AutoAssignRow
-              label="Reset Assigned Amount"
+              label="Zerar distribuído"
               value={allocation?.assigned_cents ?? 0}
               onClick={handleResetAssigned}
               pending={actionPending === "reset_assigned"}
@@ -788,10 +783,10 @@ export function CategoryDetailsPanel({
       </section>
 
       <section className="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-surface)] p-5 shadow-[var(--shadow-1)]">
-        <h3 className="text-sm font-semibold text-[var(--cc-text)]">Notes</h3>
+        <h3 className="text-sm font-semibold text-[var(--cc-text)]">Notas</h3>
         <textarea
           className="mt-3 min-h-[120px] w-full resize-y rounded-xl border border-[var(--cc-border)] bg-[var(--cc-bg-elev)] px-4 py-3 text-sm text-[var(--cc-text)] shadow-sm focus:border-[var(--ring)] focus:outline-none"
-          placeholder="Enter a note…"
+          placeholder="Escreva uma anotação…"
           value={noteDraft}
           onChange={(event) => {
             setNoteError(null);
@@ -802,7 +797,7 @@ export function CategoryDetailsPanel({
           }}
         />
         <div className="mt-2 flex items-center justify-between text-xs text-[var(--cc-text-muted)]">
-          {savingNote ? <span>Saving…</span> : noteError ? <span className="text-[var(--state-danger)]">{noteError}</span> : <span />} 
+          {savingNote ? <span>Salvando…</span> : noteError ? <span className="text-[var(--state-danger)]">{noteError}</span> : <span />}
           <span>{noteDraft.length}/500</span>
         </div>
       </section>

@@ -309,7 +309,7 @@ main.cc-main::-webkit-scrollbar-thumb {
 /* compact text */
 .tabular{font-variant-numeric:tabular-nums;}
 /* table grid */
-.budget-grid{display:grid;grid-template-columns:minmax(0,1fr) 418px;gap:16px;align-items:start;}
+.budget-grid{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:16px;align-items:start;}
 .left-wide{min-width:860px;}
 /* header */
 .tbl-head{background:var(--tbl-header);border-bottom:1px solid var(--tbl-border);height:40px;}

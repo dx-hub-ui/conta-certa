@@ -5,6 +5,24 @@ import { ensureBudgetSchema, getContext, handleError, toMonthDate } from "../../
 const GOAL_TYPES = new Set(["TB", "TBD", "MFG", "CUSTOM"]);
 const CADENCES = new Set(["weekly", "monthly", "yearly", "custom"]);
 
+async function withFetchRetry<T>(operation: () => Promise<T>, attempts = 3, backoffMs = 120): Promise<T> {
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      const message = typeof (error as any)?.message === "string" ? (error as any).message : "";
+      const isFetchFailed = error instanceof TypeError && message.includes("fetch failed");
+      if (!isFetchFailed || attempt === attempts - 1) {
+        throw error;
+      }
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, backoffMs * (attempt + 1)));
+    }
+  }
+  throw lastError ?? new Error("fetch failed");
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { categoryId: string } }
@@ -55,11 +73,13 @@ export async function PUT(
       payload.due_day_of_month = null;
     }
 
-    const { data, error } = await supabase
-      .from("budget_goal")
-      .upsert(payload, { onConflict: "org_id,category_id" })
-      .select("*")
-      .single();
+    const { data, error } = await withFetchRetry(() =>
+      supabase
+        .from("budget_goal")
+        .upsert(payload, { onConflict: "org_id,category_id" })
+        .select("*")
+        .single()
+    );
 
     if (error) throw error;
     return NextResponse.json(data, { status: 200 });
@@ -75,11 +95,13 @@ export async function DELETE(
   try {
     const { supabase, orgId } = await getContext();
     await ensureBudgetSchema(supabase);
-    const { error } = await supabase
-      .from("budget_goal")
-      .delete()
-      .eq("org_id", orgId)
-      .eq("category_id", params.categoryId);
+    const { error } = await withFetchRetry(() =>
+      supabase
+        .from("budget_goal")
+        .delete()
+        .eq("org_id", orgId)
+        .eq("category_id", params.categoryId)
+    );
     if (error) throw error;
     return new NextResponse(null, { status: 204 });
   } catch (error) {
